@@ -1,27 +1,149 @@
-# AgmBufferDirection
+# agm-buffer-direction
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.5.4.
+The directive for [@agm/core](https://github.com/SebastianM/angular-google-maps) (not official) creates a route with a given buffer zone.
 
-## Development server
+![agm-buffer-direction](https://image.ibb.co/jkEZhH/agm_buffer_direction.png)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## Installation
 
-## Code scaffolding
+Installation is done using the
+[`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
++ Install @agm/core
+  ```bash
+  npm install --save @agm/core
+  ```
 
-## Build
++ Install agm-bufer-direction
+  ```bash
+  npm install --save agm-buffer-direction
+  ```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
+## Importing Modules
 
-## Running unit tests
++ @agm/core
++ agm-buffer-direction
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```ts
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { AppComponent } from './app.component';
 
-## Running end-to-end tests
+import { AgmCoreModule } from '@agm/core';            // @agm/core
+import { AgmBufferDirectionModule } from 'agm-buffer-direction';   // agm-buffer-direction
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+@NgModule({
+    declarations: [
+        AppComponent
+    ],
+    imports: [
+        BrowserModule,
+        AgmCoreModule.forRoot({ // @agm/core
+            apiKey: 'your key',
+        }),
+        AgmBufferDirectionModule // agm-buffer-direction
+    ],
+    providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
++ import part of jsts in angular-cli.json or just in index.html
 
-## Further help
+```js
+{
+  ...
+  "apps": [
+    {
+      ...
+      "scripts": [
+        "./node_modules/agm-buffer-direction/jsts/jsts.min.js",
+        "./node_modules/agm-buffer-direction/jsts/javascript.util.js"
+      ],
+      ...
+    }
+  ],
+  ...
+}
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+## Usage
+
++ HTML
+
+  ```html
+  <agm-map [latitude]="51.678418" [longitude]="7.809007">
+    <agm-buffer-direction
+      [origin]="direction.origin"
+      [destination]="direction.destination"
+      [renderOptions]="directionOptions"
+      [waypoints]="waypoints"
+      [widthBuffer]="widthBuffer"
+      [listenChanges]="listenChanges"
+      (getWaypoints)="directionEvent($event)"
+    >
+    </agm-buffer-direction>
+    <agm-polygon
+      [paths]="directionBuffer"
+      [editable]="false"
+      [fillColor]="'#3658b1'"
+      [strokeColor]="'#3658b1'"
+      [polyDraggable]="false"
+      [strokeWeight]="1"
+    >
+    </agm-polygon>
+  </agm-map>
+  ```
+
++ CSS
+
+  ```css
+  agm-map{
+    height: 90vh;
+  }
+  ```
+
++ TS
+
+  ```ts
+  direction = {
+    origin: {
+      lat: 52.1094468,
+      lng: 23.813960500000007
+    },
+    destination: {
+      lat: 52.7840874,
+      lng: 27.543941899999936
+    }
+  };
+  directionOptions = {
+    suppressMarkers: false,
+    draggable: true
+  };
+  waypoints = [
+    {
+      location: {
+        lat: 53.86395599999999,
+        lng: 27.668367200000034
+      },
+      stopover: false
+    } 
+  ];
+  listenChanges: boolean = true;
+  directionBuffer: Array<LatLngLiteral> = [];
+  widthBuffer: number = 10000;
+  directionEvent($event){
+    this.directionBuffer = [];    
+    if($event && $event.polygon){
+      this.directionBuffer = $event.polygon;
+      this.waypoints = $event.waypoints;
+      this.direction = {
+        origin: $event.start,
+        destination: $event.end
+      }
+    } else {
+      console.log("Error with direction!");
+    }
+    this.listenChanges = false;
+  }
+  ```
